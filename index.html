@@ -1,1 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AB SolarCoin</title>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      font-family: 'Roboto', sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+    #ton-connect {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+    .container {
+      text-align: center;
+      margin-top: 100px;
+    }
+    .coin-img {
+      width: 150px;
+      height: 150px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    .title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 20px 0;
+      text-shadow: 0 0 20px #00ff6a, 0 0 30px #00ff6a;
+    }
+    .countdown-bar, .daily-bar {
+      margin-top: 50px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .countdown-item {
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .countdown-item span {
+      display: block;
+      font-size: 2.5rem;
+      color: #00ff6a;
+      text-shadow: 0 0 10px #00ff6a;
+    }
+    .footer {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #00ff6a, 0 0 20px #00ff6a;
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 0 20px #00ff6a, 0 0 40px #00ff6a;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- TonConnect Wallet -->
+  <div id="ton-connect"></div>
+  <script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: 'https://abu09127abu.github.io/Ab-coin-tast-/tonconnect-manifest.json',
+      buttonRootId: 'ton-connect'
+    });
+  </script>
+
+  <!-- Content -->
+  <div class="container">
+    <img src="coin.png" alt="AB SolarCoin" class="coin-img">
+    <h1 class="title">Claim Your AB SolarCoin</h1>
+
+    <!-- Global Countdown -->
+    <div class="countdown-bar" id="countdownBar">
+      <div class="countdown-item">
+        <span id="countdownMonths">--</span>
+        Months
+      </div>
+      <div class="countdown-item">
+        <span id="countdownDays">--</span>
+        Days
+      </div>
+      <div class="countdown-item">
+        <span id="countdownHours">--</span>
+        Hours
+      </div>
+      <div class="countdown-item">
+        <span id="countdownMinutes">--</span>
+        Minutes
+      </div>
+      <div class="countdown-item">
+        <span id="countdownSeconds">--</span>
+        Seconds
+      </div>
+      <div class="countdown-item">
+        <span id="countdownMilliseconds">--</span>
+        ms
+      </div>
+    </div>
+
+    <!-- 24-Hour Countdown -->
+    <h2 class="title">Daily Reset Timer</h2>
+    <div class="daily-bar" id="dailyCountdownBar">
+      <div class="countdown-item">
+        <span id="dailyHours">--</span>
+        Hours
+      </div>
+      <div class="countdown-item">
+        <span id="dailyMinutes">--</span>
+        Minutes
+      </div>
+      <div class="countdown-item">
+        <span id="dailySeconds">--</span>
+        Seconds
+      </div>
+    </div>
+
+    <button id="claimButton" class="claim-button" disabled>Claim Now</button>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 AB SolarCoin. All Rights Reserved.
+  </div>
+
+  <!-- Countdown Script -->
+  <script>
+    const claimButton = document.getElementById('claimButton');
+
+    // Countdown to April 1, 2025
+    const globalTargetDate = new Date('2025-04-01T00:00:00').getTime();
+
+    function updateGlobalCountdown() {
+      const now = Date.now();
+      const timeLeft = globalTargetDate - now;
+
+      if (timeLeft <= 0) {
+        document.getElementById('countdownBar').innerHTML = `<div class="countdown-item"><span>00</span> All Countdown Done!</div>`;
+        claimButton.disabled = false;
+        return;
+      }
+
+      const months = Math.floor(timeLeft / (1000 * 60 * 60 * 24 * 30));
+      const days = Math.floor((timeLeft % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      const milliseconds = Math.floor((timeLeft % 1000));
+
+      document.getElementById('countdownMonths').textContent = months;
+      document.getElementById('countdownDays').textContent = days;
+      document.getElementById('countdownHours').textContent = hours;
+      document.getElementById('countdownMinutes').textContent = minutes;
+      document.getElementById('countdownSeconds').textContent = seconds;
+      document.getElementById('countdownMilliseconds').textContent = milliseconds;
+    }
+
+    setInterval(updateGlobalCountdown, 10);
+
+    // 24-Hour Countdown
+    let dailyReset = new Date().setHours(24, 0, 0, 0); // Set to midnight
+
+    function updateDailyCountdown() {
+      const now = Date.now();
+      const timeLeft = dailyReset - now;
+
+      if (timeLeft <= 0) {
+        alert('24-hour timer completed! Resetting...');
+        dailyReset = new Date().setHours(24, 0, 0, 0); // Reset for next day
+      }
+
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+      document.getElementById('dailyHours').textContent = hours;
+      document.getElementById('dailyMinutes').textContent = minutes;
+      document.getElementById('dailySeconds').textContent = seconds;
+    }
+
+    setInterval(updateDailyCountdown, 1000);
+  </script>
+</body>
+</html>
 
