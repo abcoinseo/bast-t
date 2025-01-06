@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AB SolarCoin</title>
+  <title>AB SolarCoin Wallet</title>
   <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
   <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
   <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js"></script>
@@ -12,65 +12,66 @@
       margin: 0;
       padding: 0;
       background-color: #000;
-      font-family: 'Roboto', sans-serif;
-      color: white;
+      color: #00ffff;
+      font-family: 'Orbitron', sans-serif;
       overflow: hidden;
     }
     #ton-connect {
       position: absolute;
       top: 20px;
       right: 20px;
-      z-index: 100;
     }
     .container {
       text-align: center;
       margin-top: 100px;
     }
-    .coin-img {
+    img {
       width: 150px;
       height: 150px;
-      animation: pulse 2s infinite ease-in-out;
     }
-    .title {
-      font-size: 2.5rem;
+    .claim-button {
+      margin-top: 20px;
+      padding: 15px 30px;
+      background: linear-gradient(45deg, #00ff00, #009900);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      font-size: 18px;
       font-weight: bold;
-      margin: 20px 0;
-      text-shadow: 0 0 20px #00ff6a, 0 0 30px #00ff6a;
+      cursor: pointer;
+      transition: all 0.3s;
     }
-    .countdown-bar, .daily-bar {
-      margin-top: 50px;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
+    .claim-button:disabled {
+      background: linear-gradient(45deg, #555, #222);
+      color: #888;
+      cursor: not-allowed;
     }
-    .countdown-item {
-      text-align: center;
-      font-size: 1.2rem;
+    .timer-box {
+      display: inline-block;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      margin: 5px;
+      font-size: 16px;
+    }
+    .timer-box span {
+      font-size: 24px;
       font-weight: bold;
+      color: #fff;
     }
-    .countdown-item span {
-      display: block;
-      font-size: 2.5rem;
-      color: #00ff6a;
-      text-shadow: 0 0 10px #00ff6a;
+    #next-claim-time {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #00ffcc;
     }
     .footer {
-      position: absolute;
-      bottom: 20px;
+      position: fixed;
+      bottom: 10px;
       width: 100%;
       text-align: center;
       font-size: 14px;
-      color: #666;
-    }
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 10px #00ff6a, 0 0 20px #00ff6a;
-      }
-      50% {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px #00ff6a, 0 0 40px #00ff6a;
-      }
+      color: #777;
     }
   </style>
 </head>
@@ -84,120 +85,115 @@
     });
   </script>
 
-  <!-- Content -->
   <div class="container">
-    <img src="coin.png" alt="AB SolarCoin" class="coin-img">
-    <h1 class="title">Claim Your AB SolarCoin</h1>
-
-    <!-- Global Countdown -->
-    <div class="countdown-bar" id="countdownBar">
-      <div class="countdown-item">
-        <span id="countdownMonths">--</span>
-        Months
+    <img src="coin.png" alt="AB SolarCoin">
+    <h1>AB SolarCoin Wallet</h1>
+    <p>Claim your free coins every 24 hours!</p>
+    <div id="timer">
+      <div class="timer-box">
+        <span id="days">00</span><br>Days
       </div>
-      <div class="countdown-item">
-        <span id="countdownDays">--</span>
-        Days
+      <div class="timer-box">
+        <span id="hours">00</span><br>Hours
       </div>
-      <div class="countdown-item">
-        <span id="countdownHours">--</span>
-        Hours
+      <div class="timer-box">
+        <span id="minutes">00</span><br>Minutes
       </div>
-      <div class="countdown-item">
-        <span id="countdownMinutes">--</span>
-        Minutes
+      <div class="timer-box">
+        <span id="seconds">00</span><br>Seconds
       </div>
-      <div class="countdown-item">
-        <span id="countdownSeconds">--</span>
-        Seconds
-      </div>
-      <div class="countdown-item">
-        <span id="countdownMilliseconds">--</span>
-        ms
+      <div class="timer-box">
+        <span id="milliseconds">000</span><br>Milliseconds
       </div>
     </div>
-
-    <!-- 24-Hour Countdown -->
-    <h2 class="title">Daily Reset Timer</h2>
-    <div class="daily-bar" id="dailyCountdownBar">
-      <div class="countdown-item">
-        <span id="dailyHours">--</span>
-        Hours
-      </div>
-      <div class="countdown-item">
-        <span id="dailyMinutes">--</span>
-        Minutes
-      </div>
-      <div class="countdown-item">
-        <span id="dailySeconds">--</span>
-        Seconds
-      </div>
-    </div>
-
     <button id="claimButton" class="claim-button" disabled>Claim Now</button>
+    <p id="next-claim-time"></p>
   </div>
 
   <div class="footer">
-    &copy; 2025 AB SolarCoin. All Rights Reserved.
+    &copy; 2025 AB SolarCoin. All rights reserved.
   </div>
 
-  <!-- Countdown Script -->
-  <script>
+  <script type="module">
+    // Firebase configuration
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, update, onValue } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASHjsl_s3Ct2mhx-CHD8unOKiVMyQV0eE",
+      authDomain: "ab-soler-coin.firebaseapp.com",
+      databaseURL: "https://ab-soler-coin-default-rtdb.firebaseio.com",
+      projectId: "ab-soler-coin",
+      storageBucket: "ab-soler-coin.firebasestorage.app",
+      messagingSenderId: "659510955458",
+      appId: "1:659510955458:web:01338b3270828c9011da5b"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
     const claimButton = document.getElementById('claimButton');
+    const nextClaimTimeEl = document.getElementById('next-claim-time');
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const millisecondsEl = document.getElementById('milliseconds');
 
-    // Countdown to April 1, 2025
-    const globalTargetDate = new Date('2025-04-01T00:00:00').getTime();
+    const user = JSON.parse(localStorage.getItem('profile')) || { username: 'guest' };
+    const userRef = ref(database, `users/${user.username}`);
+    let abCoin = parseInt(localStorage.getItem('abcoin') || 0);
+    let lastClaimTime = parseInt(localStorage.getItem('lastClaimTime') || 0);
 
-    function updateGlobalCountdown() {
+    const claimCoins = () => {
       const now = Date.now();
-      const timeLeft = globalTargetDate - now;
+      const coinsToAdd = Math.floor(Math.random() * (600 - 100 + 1)) + 100; // Random 100-600
+      abCoin += coinsToAdd;
 
-      if (timeLeft <= 0) {
-        document.getElementById('countdownBar').innerHTML = `<div class="countdown-item"><span>00</span> All Countdown Done!</div>`;
+      // Save to Firebase and local storage
+      localStorage.setItem('lastClaimTime', now);
+      localStorage.setItem('abcoin', abCoin);
+      update(userRef, { abcoin });
+
+      alert(`You claimed ${coinsToAdd} AB SolarCoins! Total: ${abCoin}`);
+      updateTimer();
+    };
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const nextClaimTime = lastClaimTime + 24 * 60 * 60 * 1000; // 24 hours
+      const timeRemaining = nextClaimTime - now;
+
+      if (timeRemaining <= 0) {
         claimButton.disabled = false;
-        return;
+        nextClaimTimeEl.textContent = "You can claim now!";
+        daysEl.textContent = "00";
+        hoursEl.textContent = "00";
+        minutesEl.textContent = "00";
+        secondsEl.textContent = "00";
+        millisecondsEl.textContent = "000";
+      } else {
+        claimButton.disabled = true;
+        const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+        const milliseconds = timeRemaining % 1000;
+
+        daysEl.textContent = String(days).padStart(2, '0');
+        hoursEl.textContent = String(hours).padStart(2, '0');
+        minutesEl.textContent = String(minutes).padStart(2, '0');
+        secondsEl.textContent = String(seconds).padStart(2, '0');
+        millisecondsEl.textContent = String(milliseconds).padStart(3, '0');
+
+        const nextClaimDate = new Date(nextClaimTime).toLocaleString();
+        nextClaimTimeEl.textContent = `Next claim available on: ${nextClaimDate}`;
       }
+    };
 
-      const months = Math.floor(timeLeft / (1000 * 60 * 60 * 24 * 30));
-      const days = Math.floor((timeLeft % (1000 * 60 * 60 * 24 * 30)) / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-      const milliseconds = Math.floor((timeLeft % 1000));
-
-      document.getElementById('countdownMonths').textContent = months;
-      document.getElementById('countdownDays').textContent = days;
-      document.getElementById('countdownHours').textContent = hours;
-      document.getElementById('countdownMinutes').textContent = minutes;
-      document.getElementById('countdownSeconds').textContent = seconds;
-      document.getElementById('countdownMilliseconds').textContent = milliseconds;
-    }
-
-    setInterval(updateGlobalCountdown, 10);
-
-    // 24-Hour Countdown
-    let dailyReset = new Date().setHours(24, 0, 0, 0); // Set to midnight
-
-    function updateDailyCountdown() {
-      const now = Date.now();
-      const timeLeft = dailyReset - now;
-
-      if (timeLeft <= 0) {
-        alert('24-hour timer completed! Resetting...');
-        dailyReset = new Date().setHours(24, 0, 0, 0); // Reset for next day
-      }
-
-      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-      document.getElementById('dailyHours').textContent = hours;
-      document.getElementById('dailyMinutes').textContent = minutes;
-      document.getElementById('dailySeconds').textContent = seconds;
-    }
-
-    setInterval(updateDailyCountdown, 1000);
+    setInterval(updateTimer, 50);
+    claimButton.addEventListener('click', claimCoins);
   </script>
 </body>
 </html>
-
